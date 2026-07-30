@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import LaneDivider from '../components/LaneDivider'
+import { useAuth } from '../context/AuthContext'
 
 export default function Auth() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [mode, setMode] = useState('login')
   const [role, setRole] = useState('learner')
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' })
@@ -45,8 +47,7 @@ export default function Auth() {
       }
 
       // Store the session
-      localStorage.setItem('token', data.token)
-      localStorage.setItem('user', JSON.stringify(data.user))
+      login(data.user, data.token)
 
       // Redirect based on role
       if (data.user.role === 'OWNER') {
