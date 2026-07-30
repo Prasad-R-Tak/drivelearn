@@ -1,1 +1,19 @@
 @import "tailwindcss";
+
+@theme {
+  --color-asphalt: #1E2124;
+  --color-canvas: #F7F5EF;
+  --color-signal: #FFC93C;
+  --color-route: #2F6B4F;
+  --color-brake: #C2452F;
+  --color-steel: #6B7280;
+
+  --font-display: "Bebas Neue", sans-serif;
+  --font-body: "Work Sans", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+}
+
+body {
+  font-family: var(--font-body);
+  background: var(--color-canvas);
+}
