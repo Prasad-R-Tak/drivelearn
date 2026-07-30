@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from 'react'
 import { Star, MapPin, Search } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import LaneDivider from '../components/LaneDivider'
+import { Link } from 'react-router-dom'
 
 const ratingOptions = [
   { label: 'Any rating', value: 0 },
@@ -84,11 +85,10 @@ export default function SchoolSearch() {
                 <button
                   key={opt.label}
                   onClick={() => setMinRating(opt.value)}
-                  className={`text-left text-sm px-3 py-2 rounded-md border-2 transition-colors ${
-                    minRating === opt.value
-                      ? 'border-signal bg-signal/10 font-semibold'
-                      : 'border-steel/30 text-steel'
-                  }`}
+                  className={`text-left text-sm px-3 py-2 rounded-md border-2 transition-colors ${minRating === opt.value
+                    ? 'border-signal bg-signal/10 font-semibold'
+                    : 'border-steel/30 text-steel'
+                    }`}
                 >
                   {opt.label}
                 </button>
@@ -105,11 +105,10 @@ export default function SchoolSearch() {
                 <button
                   key={opt.label}
                   onClick={() => setMaxPrice(opt.value)}
-                  className={`text-left text-sm px-3 py-2 rounded-md border-2 transition-colors ${
-                    maxPrice === opt.value
-                      ? 'border-signal bg-signal/10 font-semibold'
-                      : 'border-steel/30 text-steel'
-                  }`}
+                  className={`text-left text-sm px-3 py-2 rounded-md border-2 transition-colors ${maxPrice === opt.value
+                    ? 'border-signal bg-signal/10 font-semibold'
+                    : 'border-steel/30 text-steel'
+                    }`}
                 >
                   {opt.label}
                 </button>
@@ -170,9 +169,12 @@ export default function SchoolSearch() {
                         <span className="font-mono text-sm">
                           From <span className="font-semibold">₹{s.price.toLocaleString('en-IN')}</span>
                         </span>
-                        <button className="bg-asphalt text-canvas text-sm font-semibold px-4 py-2 rounded-md hover:bg-signal hover:text-asphalt transition-colors">
+                        <Link
+                          to={`/schools/${s.id}`}
+                          className="bg-asphalt text-canvas text-sm font-semibold px-4 py-2 rounded-md hover:bg-signal hover:text-asphalt transition-colors"
+                        >
                           View details
-                        </button>
+                        </Link>
                       </div>
                     </div>
                   ))}
