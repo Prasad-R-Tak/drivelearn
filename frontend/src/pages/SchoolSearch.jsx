@@ -1,8 +1,7 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { Star, MapPin, Search } from 'lucide-react'
 import Navbar from '../components/Navbar'
 import LaneDivider from '../components/LaneDivider'
-import { schools } from '../data/schools'
 
 const ratingOptions = [
   { label: 'Any rating', value: 0 },
@@ -17,9 +16,24 @@ const priceOptions = [
 ]
 
 export default function SchoolSearch() {
+  const [schools, setSchools] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
   const [city, setCity] = useState('')
   const [minRating, setMinRating] = useState(0)
   const [maxPrice, setMaxPrice] = useState(Infinity)
+
+  useEffect(() => {
+    fetch('http://localhost:5000/api/schools')
+      .then((res) => {
+        if (!res.ok) throw new Error('Failed to load schools')
+        return res.json()
+      })
+      .then((data) => setSchools(data))
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false))
+  }, [])
 
   const results = useMemo(() => {
     return schools.filter((s) => {
@@ -31,7 +45,7 @@ export default function SchoolSearch() {
       const matchesPrice = s.price <= maxPrice
       return matchesCity && matchesRating && matchesPrice
     })
-  }, [city, minRating, maxPrice])
+  }, [schools, city, minRating, maxPrice])
 
   return (
     <div className="min-h-screen bg-canvas text-asphalt">
@@ -106,53 +120,65 @@ export default function SchoolSearch() {
 
         {/* Results */}
         <div className="flex-1">
-          <p className="text-steel text-sm mb-4 font-mono">
-            {results.length} {results.length === 1 ? 'school' : 'schools'} found
-          </p>
+          {loading && <p className="text-steel text-sm">Loading schools…</p>}
 
-          {results.length === 0 ? (
-            <div className="border-2 border-dashed border-steel/40 rounded-lg p-10 text-center text-steel">
-              No schools match your filters. Try widening your search.
+          {error && (
+            <div className="border-2 border-brake rounded-lg p-6 text-brake text-sm">
+              Couldn't load schools: {error}. Make sure the backend server is running on port 5000.
             </div>
-          ) : (
-            <div className="grid sm:grid-cols-2 gap-5">
-              {results.map((s) => (
-                <div
-                  key={s.id}
-                  className="border-2 border-asphalt rounded-lg p-5 hover:bg-signal/10 transition-colors"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-display text-xl leading-tight pr-2">{s.name}</h3>
-                    <span className="flex items-center gap-1 text-sm font-mono shrink-0">
-                      <Star size={14} className="fill-signal text-signal" />
-                      {s.rating}
-                    </span>
-                  </div>
-                  <p className="flex items-center gap-1 text-sm text-steel mb-3">
-                    <MapPin size={14} />
-                    {s.locality}, {s.city}
-                  </p>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {s.courses.map((c) => (
-                      <span
-                        key={c}
-                        className="text-xs font-mono border border-steel/40 text-steel rounded px-2 py-0.5"
-                      >
-                        {c}
-                      </span>
-                    ))}
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="font-mono text-sm">
-                      From <span className="font-semibold">₹{s.price.toLocaleString('en-IN')}</span>
-                    </span>
-                    <button className="bg-asphalt text-canvas text-sm font-semibold px-4 py-2 rounded-md hover:bg-signal hover:text-asphalt transition-colors">
-                      View details
-                    </button>
-                  </div>
+          )}
+
+          {!loading && !error && (
+            <>
+              <p className="text-steel text-sm mb-4 font-mono">
+                {results.length} {results.length === 1 ? 'school' : 'schools'} found
+              </p>
+
+              {results.length === 0 ? (
+                <div className="border-2 border-dashed border-steel/40 rounded-lg p-10 text-center text-steel">
+                  No schools match your filters. Try widening your search.
                 </div>
-              ))}
-            </div>
+              ) : (
+                <div className="grid sm:grid-cols-2 gap-5">
+                  {results.map((s) => (
+                    <div
+                      key={s.id}
+                      className="border-2 border-asphalt rounded-lg p-5 hover:bg-signal/10 transition-colors"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-display text-xl leading-tight pr-2">{s.name}</h3>
+                        <span className="flex items-center gap-1 text-sm font-mono shrink-0">
+                          <Star size={14} className="fill-signal text-signal" />
+                          {s.rating}
+                        </span>
+                      </div>
+                      <p className="flex items-center gap-1 text-sm text-steel mb-3">
+                        <MapPin size={14} />
+                        {s.locality}, {s.city}
+                      </p>
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {s.courses.map((c) => (
+                          <span
+                            key={c}
+                            className="text-xs font-mono border border-steel/40 text-steel rounded px-2 py-0.5"
+                          >
+                            {c}
+                          </span>
+                        ))}
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-sm">
+                          From <span className="font-semibold">₹{s.price.toLocaleString('en-IN')}</span>
+                        </span>
+                        <button className="bg-asphalt text-canvas text-sm font-semibold px-4 py-2 rounded-md hover:bg-signal hover:text-asphalt transition-colors">
+                          View details
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>

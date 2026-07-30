@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  
+}
+
+enum Role {
+  LEARNER
+  OWNER
+}
+
+enum EnrollmentStatus {
+  ACTIVE
+  COMPLETED
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role
+  createdAt DateTime @default(now())
+
+  school    School?  // present only if role is OWNER
+}
+
+model School {
+  id        Int      @id @default(autoincrement())
+  name      String
+  city      String
+  locality  String
+  rating    Float    @default(0)
+  reviews   Int      @default(0)
+
+  owner     User     @relation(fields: [ownerId], references: [id])
+  ownerId   Int      @unique
+
+  courses      Course[]
+  enrollments  Enrollment[]
+}
+
+model Course {
+  id        Int      @id @default(autoincrement())
+  name      String
+  duration  String
+  price     Int
+
+  school    School   @relation(fields: [schoolId], references: [id])
+  schoolId  Int
+
+  enrollments Enrollment[]
+}
+
+model Enrollment {
+  id        Int               @id @default(autoincrement())
+  studentName String
+  progress  Int               @default(0)
+  status    EnrollmentStatus  @default(ACTIVE)
+
+  school    School   @relation(fields: [schoolId], references: [id])
+  schoolId  Int
+
+  course    Course   @relation(fields: [courseId], references: [id])
+  courseId  Int
+}
