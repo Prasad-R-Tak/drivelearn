@@ -1,17 +1,64 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import LaneDivider from '../components/LaneDivider'
 
 export default function Auth() {
-  const [mode, setMode] = useState('login') // 'login' | 'signup'
-  const [role, setRole] = useState('learner') // 'learner' | 'owner'
+  const navigate = useNavigate()
+  const [mode, setMode] = useState('login')
+  const [role, setRole] = useState('learner')
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' })
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
 
   const isSignup = mode === 'signup'
 
-  const handleSubmit = (e) => {
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value })
+  }
+
+  const handleSubmit = async (e) => {
     e.preventDefault()
-    // Placeholder — real auth wiring comes with the backend
-    console.log('Form submitted', { mode, role })
+    setError('')
+
+    if (isSignup && form.password !== form.confirmPassword) {
+      setError('Passwords do not match')
+      return
+    }
+
+    setLoading(true)
+    try {
+      const endpoint = isSignup ? 'signup' : 'login'
+      const body = isSignup
+        ? { name: form.name, email: form.email, password: form.password, role: role.toUpperCase() }
+        : { email: form.email, password: form.password }
+
+      const res = await fetch(`http://localhost:5000/api/auth/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Something went wrong')
+      }
+
+      // Store the session
+      localStorage.setItem('token', data.token)
+      localStorage.setItem('user', JSON.stringify(data.user))
+
+      // Redirect based on role
+      if (data.user.role === 'OWNER') {
+        navigate('/dashboard')
+      } else {
+        navigate('/schools')
+      }
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
   }
 
   return (
@@ -52,7 +99,7 @@ export default function Auth() {
             {/* Mode toggle */}
             <div className="flex border-2 border-asphalt rounded-md overflow-hidden mb-8">
               <button
-                onClick={() => setMode('login')}
+                onClick={() => { setMode('login'); setError('') }}
                 className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
                   mode === 'login' ? 'bg-asphalt text-canvas' : 'bg-transparent text-asphalt'
                 }`}
@@ -60,7 +107,7 @@ export default function Auth() {
                 Log in
               </button>
               <button
-                onClick={() => setMode('signup')}
+                onClick={() => { setMode('signup'); setError('') }}
                 className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
                   mode === 'signup' ? 'bg-asphalt text-canvas' : 'bg-transparent text-asphalt'
                 }`}
@@ -75,6 +122,12 @@ export default function Auth() {
             <p className="text-steel text-sm mb-6">
               {isSignup ? 'Takes less than a minute.' : "Enter your details to continue."}
             </p>
+
+            {error && (
+              <div className="mb-4 text-sm text-brake border-2 border-brake rounded-md px-3 py-2">
+                {error}
+              </div>
+            )}
 
             {/* Role selector — signup only */}
             {isSignup && (
@@ -117,7 +170,10 @@ export default function Auth() {
                   </label>
                   <input
                     type="text"
+                    name="name"
                     required
+                    value={form.name}
+                    onChange={handleChange}
                     className="w-full border-2 border-asphalt rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-signal transition-colors"
                     placeholder="Your name"
                   />
@@ -130,7 +186,10 @@ export default function Auth() {
                 </label>
                 <input
                   type="email"
+                  name="email"
                   required
+                  value={form.email}
+                  onChange={handleChange}
                   className="w-full border-2 border-asphalt rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-signal transition-colors"
                   placeholder="you@example.com"
                 />
@@ -142,7 +201,10 @@ export default function Auth() {
                 </label>
                 <input
                   type="password"
+                  name="password"
                   required
+                  value={form.password}
+                  onChange={handleChange}
                   className="w-full border-2 border-asphalt rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-signal transition-colors"
                   placeholder="••••••••"
                 />
@@ -155,7 +217,10 @@ export default function Auth() {
                   </label>
                   <input
                     type="password"
+                    name="confirmPassword"
                     required
+                    value={form.confirmPassword}
+                    onChange={handleChange}
                     className="w-full border-2 border-asphalt rounded-md px-3 py-2.5 text-sm focus:outline-none focus:border-signal transition-colors"
                     placeholder="••••••••"
                   />
@@ -164,9 +229,10 @@ export default function Auth() {
 
               <button
                 type="submit"
-                className="w-full bg-signal text-asphalt font-semibold py-3 rounded-md hover:bg-asphalt hover:text-signal transition-colors mt-2"
+                disabled={loading}
+                className="w-full bg-signal text-asphalt font-semibold py-3 rounded-md hover:bg-asphalt hover:text-signal transition-colors mt-2 disabled:opacity-60"
               >
-                {isSignup ? 'Create account' : 'Log in'}
+                {loading ? 'Please wait…' : isSignup ? 'Create account' : 'Log in'}
               </button>
             </form>
 
@@ -175,7 +241,7 @@ export default function Auth() {
             <p className="text-center text-sm text-steel">
               {isSignup ? 'Already have an account?' : "Don't have an account?"}{' '}
               <button
-                onClick={() => setMode(isSignup ? 'login' : 'signup')}
+                onClick={() => { setMode(isSignup ? 'login' : 'signup'); setError('') }}
                 className="text-asphalt font-semibold hover:text-brake transition-colors"
               >
                 {isSignup ? 'Log in' : 'Sign up'}
