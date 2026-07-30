@@ -4,6 +4,7 @@ require('dotenv').config()
 
 const schoolsRouter = require('./routes/schools')
 const authRouter = require('./routes/auth')
+const ownerRouter = require('./routes/owner')
 
 const app = express()
 app.use(cors())
@@ -15,6 +16,7 @@ app.get('/api/health', (req, res) => {
 
 app.use('/api/schools', schoolsRouter)
 app.use('/api/auth', authRouter)
+app.use('/api/owner', ownerRouter)
 
 const PORT = process.env.PORT || 5000
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))

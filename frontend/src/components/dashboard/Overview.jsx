@@ -1,6 +1,4 @@
-import { stats, students } from '../../data/ownerData'
-
-export default function Overview() {
+export default function Overview({ stats, students }) {
   const cards = [
     { label: 'Total students', value: stats.totalStudents },
     { label: 'Active courses', value: stats.activeCourses },
@@ -26,26 +24,30 @@ export default function Overview() {
       </div>
 
       <h2 className="font-display text-2xl mb-4">Recent students</h2>
-      <div className="border-2 border-asphalt rounded-lg overflow-hidden">
-        {recent.map((s, i) => (
-          <div
-            key={s.id}
-            className={`flex items-center justify-between px-5 py-3 text-sm ${
-              i !== recent.length - 1 ? 'border-b border-asphalt/20' : ''
-            }`}
-          >
-            <span className="font-medium">{s.name}</span>
-            <span className="text-steel font-mono text-xs">{s.course}</span>
-            <span
-              className={`text-xs font-semibold px-2 py-1 rounded ${
-                s.status === 'Completed' ? 'bg-route/10 text-route' : 'bg-signal/20 text-asphalt'
+      {recent.length === 0 ? (
+        <p className="text-steel text-sm">No students enrolled yet.</p>
+      ) : (
+        <div className="border-2 border-asphalt rounded-lg overflow-hidden">
+          {recent.map((s, i) => (
+            <div
+              key={s.id}
+              className={`flex items-center justify-between px-5 py-3 text-sm ${
+                i !== recent.length - 1 ? 'border-b border-asphalt/20' : ''
               }`}
             >
-              {s.status}
-            </span>
-          </div>
-        ))}
-      </div>
+              <span className="font-medium">{s.name}</span>
+              <span className="text-steel font-mono text-xs">{s.course}</span>
+              <span
+                className={`text-xs font-semibold px-2 py-1 rounded ${
+                  s.status === 'Completed' ? 'bg-route/10 text-route' : 'bg-signal/20 text-asphalt'
+                }`}
+              >
+                {s.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
