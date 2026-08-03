@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import DashboardSidebar from '../components/DashboardSidebar'
 import Overview from '../components/dashboard/Overview'
 import Students from '../components/dashboard/Students'
@@ -10,10 +10,10 @@ export default function OwnerDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  useEffect(() => {
+  const fetchDashboard = useCallback(() => {
     const token = localStorage.getItem('token')
-
-    fetch('http://localhost:5000/api/owner/dashboard', {
+    setLoading(true)
+    return fetch('http://localhost:5000/api/owner/dashboard', {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -24,6 +24,10 @@ export default function OwnerDashboard() {
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false))
   }, [])
+
+  useEffect(() => {
+    fetchDashboard()
+  }, [fetchDashboard])
 
   return (
     <div className="min-h-screen flex bg-canvas text-asphalt">
@@ -40,8 +44,12 @@ export default function OwnerDashboard() {
         {data && (
           <>
             {active === 'overview' && <Overview stats={data.stats} students={data.students} />}
-            {active === 'students' && <Students students={data.students} />}
-            {active === 'courses' && <Courses courses={data.courses} />}
+            {active === 'students' && (
+              <Students students={data.students} courses={data.courses} onDataChanged={fetchDashboard} />
+            )}
+            {active === 'courses' && (
+              <Courses courses={data.courses} onDataChanged={fetchDashboard} />
+            )}
           </>
         )}
       </main>

@@ -1,6 +1,7 @@
 import Navbar from '../components/Navbar'
 import LaneDivider from '../components/LaneDivider'
 import { Link } from 'react-router-dom'
+// import { Link } from 'react-router-dom'
 
 const steps = [
   { n: '01', label: 'Search', desc: 'Find schools near you by city and locality.' },
@@ -39,9 +40,9 @@ export default function Landing() {
             <Link to="/schools" className="bg-signal text-asphalt font-semibold px-6 py-3 rounded-md hover:bg-white transition-colors">
               Find a driving school
             </Link>
-            <button className="border border-steel text-canvas font-semibold px-6 py-3 rounded-md hover:border-signal hover:text-signal transition-colors">
-              List your school
-            </button>
+            <Link to="/login?mode=signup&role=owner" className="border border-steel text-canvas font-semibold px-6 py-3 rounded-md hover:border-signal hover:text-signal transition-colors">
+  List your school
+</Link>
           </div>
         </div>
         <LaneDivider />
@@ -100,9 +101,9 @@ export default function Landing() {
               and get discovered by learners near you.
             </p>
           </div>
-          <button className="bg-signal text-asphalt font-semibold px-6 py-3 rounded-md hover:bg-white transition-colors whitespace-nowrap">
-            List your school
-          </button>
+          <Link to="/login?mode=signup&role=owner" className="bg-signal text-asphalt font-semibold px-6 py-3 rounded-md hover:bg-white transition-colors whitespace-nowrap">
+  List your school
+</Link>
         </div>
       </section>
 

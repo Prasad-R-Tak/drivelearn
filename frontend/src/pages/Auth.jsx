@@ -2,12 +2,14 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import LaneDivider from '../components/LaneDivider'
 import { useAuth } from '../context/AuthContext'
+import { useSearchParams } from 'react-router-dom'
 
 export default function Auth() {
   const navigate = useNavigate()
   const { login } = useAuth()
-  const [mode, setMode] = useState('login')
-  const [role, setRole] = useState('learner')
+  const [searchParams] = useSearchParams()
+  const [mode, setMode] = useState(searchParams.get('mode') === 'signup' ? 'signup' : 'login')
+  const [role, setRole] = useState(searchParams.get('role') === 'owner' ? 'owner' : 'learner')
   const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -101,17 +103,15 @@ export default function Auth() {
             <div className="flex border-2 border-asphalt rounded-md overflow-hidden mb-8">
               <button
                 onClick={() => { setMode('login'); setError('') }}
-                className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
-                  mode === 'login' ? 'bg-asphalt text-canvas' : 'bg-transparent text-asphalt'
-                }`}
+                className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${mode === 'login' ? 'bg-asphalt text-canvas' : 'bg-transparent text-asphalt'
+                  }`}
               >
                 Log in
               </button>
               <button
                 onClick={() => { setMode('signup'); setError('') }}
-                className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${
-                  mode === 'signup' ? 'bg-asphalt text-canvas' : 'bg-transparent text-asphalt'
-                }`}
+                className={`flex-1 py-2.5 text-sm font-semibold transition-colors ${mode === 'signup' ? 'bg-asphalt text-canvas' : 'bg-transparent text-asphalt'
+                  }`}
               >
                 Sign up
               </button>
@@ -140,22 +140,20 @@ export default function Auth() {
                   <button
                     type="button"
                     onClick={() => setRole('learner')}
-                    className={`border-2 rounded-md py-3 text-sm font-semibold transition-colors ${
-                      role === 'learner'
+                    className={`border-2 rounded-md py-3 text-sm font-semibold transition-colors ${role === 'learner'
                         ? 'border-signal bg-signal/10 text-asphalt'
                         : 'border-steel/40 text-steel'
-                    }`}
+                      }`}
                   >
                     Learner
                   </button>
                   <button
                     type="button"
                     onClick={() => setRole('owner')}
-                    className={`border-2 rounded-md py-3 text-sm font-semibold transition-colors ${
-                      role === 'owner'
+                    className={`border-2 rounded-md py-3 text-sm font-semibold transition-colors ${role === 'owner'
                         ? 'border-signal bg-signal/10 text-asphalt'
                         : 'border-steel/40 text-steel'
-                    }`}
+                      }`}
                   >
                     School owner
                   </button>
