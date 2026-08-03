@@ -24,6 +24,7 @@ model User {
   password  String
   role      Role
   createdAt DateTime @default(now())
+  enrollments Enrollment[]
 
   school    School?  // present only if role is OWNER
 }
@@ -66,4 +67,7 @@ model Enrollment {
 
   course    Course   @relation(fields: [courseId], references: [id])
   courseId  Int
+
+  user      User?    @relation(fields: [userId], references: [id])
+  userId    Int?
 }
