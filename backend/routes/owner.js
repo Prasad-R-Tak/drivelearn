@@ -7,6 +7,38 @@ const router = express.Router()
 // All routes here require a logged-in OWNER
 router.use(requireAuth, requireRole('OWNER'))
 
+// POST /api/owner/school — register a new school for the logged-in owner
+router.post('/school', async (req, res) => {
+  try {
+    const { name, city, locality } = req.body
+
+    if (!name || !city || !locality) {
+      return res.status(400).json({ error: 'name, city, and locality are required' })
+    }
+
+    const existing = await prisma.school.findUnique({ where: { ownerId: req.user.userId } })
+    if (existing) {
+      return res.status(409).json({ error: 'You already have a registered school' })
+    }
+
+    const school = await prisma.school.create({
+      data: {
+        name,
+        city,
+        locality,
+        rating: 0,
+        reviews: 0,
+        ownerId: req.user.userId,
+      },
+    })
+
+    res.status(201).json(school)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to register school' })
+  }
+})
+
 // GET /api/owner/dashboard — overview + students + courses for the logged-in owner's school
 router.get('/dashboard', async (req, res) => {
   try {
@@ -21,7 +53,7 @@ router.get('/dashboard', async (req, res) => {
     })
 
     if (!school) {
-      return res.status(404).json({ error: 'No school found for this owner' })
+      return res.json({ hasSchool: false })
     }
 
     const totalStudents = school.enrollments.length
@@ -45,6 +77,7 @@ router.get('/dashboard', async (req, res) => {
     }))
 
     res.json({
+      hasSchool: true,
       school: { id: school.id, name: school.name, city: school.city, locality: school.locality },
       stats: {
         totalStudents,

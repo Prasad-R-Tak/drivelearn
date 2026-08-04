@@ -167,7 +167,11 @@ export default function SchoolSearch() {
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="font-mono text-sm">
-                          From <span className="font-semibold">₹{s.price.toLocaleString('en-IN')}</span>
+                          {s.price != null ? (
+                            <>From <span className="font-semibold">₹{s.price.toLocaleString('en-IN')}</span></>
+                          ) : (
+                            <span className="text-steel">Pricing coming soon</span>
+                          )}
                         </span>
                         <Link
                           to={`/schools/${s.id}`}

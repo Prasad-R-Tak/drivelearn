@@ -10,16 +10,18 @@ router.get('/', async (req, res) => {
       include: { courses: true },
     })
 
-    const formatted = schools.map((s) => ({
-      id: s.id,
-      name: s.name,
-      city: s.city,
-      locality: s.locality,
-      rating: s.rating,
-      reviews: s.reviews,
-      price: Math.min(...s.courses.map((c) => c.price)),
-      courses: s.courses.map((c) => c.name),
-    }))
+    const formatted = schools
+      .filter((s) => s.courses.length > 0) // hide schools that haven't added courses yet
+      .map((s) => ({
+        id: s.id,
+        name: s.name,
+        city: s.city,
+        locality: s.locality,
+        rating: s.rating,
+        reviews: s.reviews,
+        price: Math.min(...s.courses.map((c) => c.price)),
+        courses: s.courses.map((c) => c.name),
+      }))
 
     res.json(formatted)
   } catch (err) {

@@ -3,6 +3,7 @@ import DashboardSidebar from '../components/DashboardSidebar'
 import Overview from '../components/dashboard/Overview'
 import Students from '../components/dashboard/Students'
 import Courses from '../components/dashboard/Courses'
+import RegisterSchool from './RegisterSchool'
 
 export default function OwnerDashboard() {
   const [active, setActive] = useState('overview')
@@ -29,18 +30,26 @@ export default function OwnerDashboard() {
     fetchDashboard()
   }, [fetchDashboard])
 
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center text-steel text-sm">Loading…</div>
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="border-2 border-brake rounded-lg p-6 text-brake text-sm max-w-md">{error}</div>
+      </div>
+    )
+  }
+
+  if (data && !data.hasSchool) {
+    return <RegisterSchool onRegistered={fetchDashboard} />
+  }
+
   return (
     <div className="min-h-screen flex bg-canvas text-asphalt">
       <DashboardSidebar active={active} onChange={setActive} />
       <main className="flex-1 px-10 py-10">
-        {loading && <p className="text-steel text-sm">Loading dashboard…</p>}
-
-        {error && (
-          <div className="border-2 border-brake rounded-lg p-6 text-brake text-sm max-w-md">
-            {error}
-          </div>
-        )}
-
         {data && (
           <>
             {active === 'overview' && <Overview stats={data.stats} students={data.students} />}
