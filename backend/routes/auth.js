@@ -2,6 +2,7 @@ const express = require('express')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const prisma = require('../prisma/client')
+const { requireAuth } = require('../middleware/auth')
 
 const router = express.Router()
 
@@ -76,6 +77,80 @@ router.post('/login', async (req, res) => {
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Login failed' })
+  }
+})
+
+// GET /api/auth/me — get current logged-in user's profile
+router.get('/me', requireAuth, async (req, res) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { id: true, name: true, email: true, role: true, createdAt: true },
+    })
+    if (!user) return res.status(404).json({ error: 'User not found' })
+    res.json(user)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to load profile' })
+  }
+})
+
+// PATCH /api/auth/me — update name/email
+router.patch('/me', requireAuth, async (req, res) => {
+  try {
+    const { name, email } = req.body
+
+    if (email) {
+      const existing = await prisma.user.findUnique({ where: { email } })
+      if (existing && existing.id !== req.user.userId) {
+        return res.status(409).json({ error: 'That email is already in use' })
+      }
+    }
+
+    const user = await prisma.user.update({
+      where: { id: req.user.userId },
+      data: {
+        name: name ?? undefined,
+        email: email ?? undefined,
+      },
+      select: { id: true, name: true, email: true, role: true },
+    })
+
+    res.json(user)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to update profile' })
+  }
+})
+
+// PATCH /api/auth/password — change password
+router.patch('/password', requireAuth, async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ error: 'Current and new password are required' })
+    }
+    if (newPassword.length < 6) {
+      return res.status(400).json({ error: 'New password must be at least 6 characters' })
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.userId } })
+    const valid = await bcrypt.compare(currentPassword, user.password)
+    if (!valid) {
+      return res.status(401).json({ error: 'Current password is incorrect' })
+    }
+
+    const newHash = await bcrypt.hash(newPassword, 10)
+    await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { password: newHash },
+    })
+
+    res.json({ message: 'Password updated successfully' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to update password' })
   }
 })
 

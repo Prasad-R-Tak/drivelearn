@@ -40,6 +40,9 @@ export default function Navbar() {
                   Dashboard
                 </Link>
               )}
+              <Link to="/settings" className="text-sm font-medium hover:text-signal transition-colors">
+                Settings
+              </Link>
               <span className="text-sm text-steel hidden sm:inline">{user.name}</span>
               <button
                 onClick={handleLogout}

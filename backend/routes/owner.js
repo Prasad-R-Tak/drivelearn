@@ -176,4 +176,29 @@ router.patch('/courses/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to update course' })
   }
 })
+
+// PATCH /api/owner/school — update school details
+router.patch('/school', async (req, res) => {
+  try {
+    const { name, city, locality } = req.body
+
+    const school = await prisma.school.findUnique({ where: { ownerId: req.user.userId } })
+    if (!school) return res.status(404).json({ error: 'No school found for this owner' })
+
+    const updated = await prisma.school.update({
+      where: { id: school.id },
+      data: {
+        name: name ?? school.name,
+        city: city ?? school.city,
+        locality: locality ?? school.locality,
+      },
+    })
+
+    res.json(updated)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to update school' })
+  }
+})
+
 module.exports = router

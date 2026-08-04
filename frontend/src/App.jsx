@@ -5,6 +5,7 @@ import Auth from './pages/Auth'
 import SchoolSearch from './pages/SchoolSearch'
 import SchoolDetail from './pages/SchoolDetail'
 import OwnerDashboard from './pages/OwnerDashboard'
+import Settings from './pages/Settings'
 
 function ProtectedRoute({ children, role }) {
   const { user, loading } = useAuth()
@@ -19,6 +20,14 @@ function ProtectedRoute({ children, role }) {
 function AppRoutes() {
   return (
     <Routes>
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute>
+            <Settings />
+          </ProtectedRoute>
+        }
+      />
       <Route path="/" element={<Landing />} />
       <Route path="/login" element={<Auth />} />
       <Route path="/schools" element={<SchoolSearch />} />
