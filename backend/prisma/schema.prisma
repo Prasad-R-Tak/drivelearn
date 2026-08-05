@@ -25,6 +25,7 @@ model User {
   role      Role
   createdAt DateTime @default(now())
   enrollments Enrollment[]
+  reviewsWritten Review[]
 
   school    School?  // present only if role is OWNER
 }
@@ -42,6 +43,7 @@ model School {
 
   courses      Course[]
   enrollments  Enrollment[]
+  reviewsList Review[]
 }
 
 model Course {
@@ -54,6 +56,7 @@ model Course {
   schoolId  Int
 
   enrollments Enrollment[]
+  reviews   Review[]
 }
 
 model Enrollment {
@@ -70,4 +73,22 @@ model Enrollment {
 
   user      User?    @relation(fields: [userId], references: [id])
   userId    Int?
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  school    School   @relation(fields: [schoolId], references: [id])
+  schoolId  Int
+
+  course    Course   @relation(fields: [courseId], references: [id])
+  courseId  Int
+
+  user      User     @relation(fields: [userId], references: [id])
+  userId    Int
+
+  @@unique([courseId, userId]) // one review per learner per course
 }
