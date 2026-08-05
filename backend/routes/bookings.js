@@ -4,31 +4,42 @@ const { requireAuth, requireRole } = require('../middleware/auth')
 
 const router = express.Router()
 
-// POST /api/bookings — a logged-in learner books a course
+// POST /api/bookings — a logged-in learner books a specific lesson slot
 router.post('/', requireAuth, requireRole('LEARNER'), async (req, res) => {
   try {
-    const { courseId } = req.body
+    const { slotId } = req.body
 
-    if (!courseId) {
-      return res.status(400).json({ error: 'courseId is required' })
+    if (!slotId) {
+      return res.status(400).json({ error: 'slotId is required' })
     }
 
-    const course = await prisma.course.findUnique({ where: { id: Number(courseId) } })
-    if (!course) {
-      return res.status(404).json({ error: 'Course not found' })
-    }
+    const slot = await prisma.lessonSlot.findUnique({
+      where: { id: Number(slotId) },
+      include: { course: true },
+    })
+
+    if (!slot) return res.status(404).json({ error: 'Slot not found' })
+    if (slot.isBooked) return res.status(409).json({ error: 'This slot is already booked' })
 
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } })
 
-    const enrollment = await prisma.enrollment.create({
-      data: {
-        studentName: user.name,
-        progress: 0,
-        status: 'ACTIVE',
-        schoolId: course.schoolId,
-        courseId: course.id,
-        userId: user.id,
-      },
+    const enrollment = await prisma.$transaction(async (tx) => {
+      const created = await tx.enrollment.create({
+        data: {
+          studentName: user.name,
+          progress: 0,
+          status: 'ACTIVE',
+          schoolId: slot.course.schoolId,
+          courseId: slot.course.id,
+          userId: user.id,
+          slotId: slot.id,
+        },
+      })
+      await tx.lessonSlot.update({
+        where: { id: slot.id },
+        data: { isBooked: true },
+      })
+      return created
     })
 
     res.status(201).json(enrollment)

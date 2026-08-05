@@ -1,9 +1,11 @@
 import { useState } from 'react'
 import Modal from '../Modal'
+import SlotsManager from '../SlotsManager'
 
 export default function Courses({ courses, onDataChanged }) {
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingCourse, setEditingCourse] = useState(null)
+  const [managingSlotsFor, setManagingSlotsFor] = useState(null)
 
   return (
     <div>
@@ -29,11 +31,25 @@ export default function Courses({ courses, onDataChanged }) {
                 <span className="font-mono font-semibold">₹{c.price.toLocaleString('en-IN')}</span>
                 <span className="text-steel">{c.enrolled} enrolled</span>
               </div>
+              <div className="flex gap-2 mb-2">
+                <button
+                  onClick={() => setEditingCourse(c)}
+                  className="flex-1 border-2 border-asphalt text-sm font-semibold py-2 rounded-md hover:bg-asphalt hover:text-canvas transition-colors"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(c.id)}
+                  className="border-2 border-brake text-brake text-sm font-semibold px-3 py-2 rounded-md hover:bg-brake hover:text-canvas transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
               <button
-                onClick={() => setEditingCourse(c)}
-                className="w-full border-2 border-asphalt text-sm font-semibold py-2 rounded-md hover:bg-asphalt hover:text-canvas transition-colors"
+                onClick={() => setManagingSlotsFor(c)}
+                className="w-full border-2 border-route text-route text-sm font-semibold py-2 rounded-md hover:bg-route hover:text-canvas transition-colors"
               >
-                Edit course
+                Manage slots
               </button>
             </div>
           ))}
@@ -51,6 +67,10 @@ export default function Courses({ courses, onDataChanged }) {
           onClose={() => setEditingCourse(null)}
           onSaved={onDataChanged}
         />
+      )}
+
+      {managingSlotsFor && (
+        <SlotsManager course={managingSlotsFor} onClose={() => setManagingSlotsFor(null)} />
       )}
     </div>
   )

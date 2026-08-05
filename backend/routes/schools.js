@@ -37,7 +37,14 @@ router.get('/:id', async (req, res) => {
     const school = await prisma.school.findUnique({
       where: { id: Number(req.params.id) },
       include: {
-        courses: true,
+        courses: {
+          include: {
+            slots: {
+              where: { isBooked: false, dateTime: { gte: new Date() } },
+              orderBy: { dateTime: 'asc' },
+            },
+          },
+        },
         reviewsList: {
           include: {
             user: { select: { name: true } },

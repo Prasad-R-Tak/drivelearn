@@ -201,4 +201,78 @@ router.patch('/school', async (req, res) => {
   }
 })
 
+// POST /api/owner/courses/:courseId/slots — add a lesson slot to a course
+router.post('/courses/:courseId/slots', async (req, res) => {
+  try {
+    const { dateTime } = req.body
+    if (!dateTime) return res.status(400).json({ error: 'dateTime is required' })
+
+    const school = await prisma.school.findUnique({ where: { ownerId: req.user.userId } })
+    if (!school) return res.status(404).json({ error: 'No school found for this owner' })
+
+    const course = await prisma.course.findFirst({
+      where: { id: Number(req.params.courseId), schoolId: school.id },
+    })
+    if (!course) return res.status(404).json({ error: 'Course not found' })
+
+    const slot = await prisma.lessonSlot.create({
+      data: { dateTime: new Date(dateTime), courseId: course.id },
+    })
+
+    res.status(201).json(slot)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to add slot' })
+  }
+})
+
+// GET /api/owner/courses/:courseId/slots — list all slots for a course
+router.get('/courses/:courseId/slots', async (req, res) => {
+  try {
+    const school = await prisma.school.findUnique({ where: { ownerId: req.user.userId } })
+    if (!school) return res.status(404).json({ error: 'No school found for this owner' })
+
+    const course = await prisma.course.findFirst({
+      where: { id: Number(req.params.courseId), schoolId: school.id },
+    })
+    if (!course) return res.status(404).json({ error: 'Course not found' })
+
+    const slots = await prisma.lessonSlot.findMany({
+      where: { courseId: course.id },
+      orderBy: { dateTime: 'asc' },
+      include: { enrollment: { select: { studentName: true } } },
+    })
+
+    res.json(slots)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to load slots' })
+  }
+})
+
+// DELETE /api/owner/slots/:id — delete a slot (only if not booked)
+router.delete('/slots/:id', async (req, res) => {
+  try {
+    const school = await prisma.school.findUnique({ where: { ownerId: req.user.userId } })
+    if (!school) return res.status(404).json({ error: 'No school found for this owner' })
+
+    const slot = await prisma.lessonSlot.findUnique({
+      where: { id: Number(req.params.id) },
+      include: { course: true },
+    })
+    if (!slot || slot.course.schoolId !== school.id) {
+      return res.status(404).json({ error: 'Slot not found' })
+    }
+    if (slot.isBooked) {
+      return res.status(409).json({ error: 'Cannot delete a booked slot' })
+    }
+
+    await prisma.lessonSlot.delete({ where: { id: slot.id } })
+    res.json({ message: 'Slot deleted' })
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to delete slot' })
+  }
+})
+
 module.exports = router

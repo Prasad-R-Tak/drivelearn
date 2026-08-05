@@ -12,8 +12,8 @@ export default function SchoolDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const [bookingCourseId, setBookingCourseId] = useState(null)
-  const [bookedCourseIds, setBookedCourseIds] = useState([])
+  const [bookingSlotId, setBookingSlotId] = useState(null)
+  const [bookedSlotIds, setBookedSlotIds] = useState([])
   const [bookingError, setBookingError] = useState('')
 
   const [myBookings, setMyBookings] = useState([]) // [{ courseId, courseName, review }]
@@ -45,24 +45,25 @@ export default function SchoolDetail() {
     loadMyBookings()
   }, [id, user])
 
-  const handleBook = async (courseId) => {
+  const handleBook = async (slotId) => {
     setBookingError('')
-    setBookingCourseId(courseId)
+    setBookingSlotId(slotId)
     try {
       const token = localStorage.getItem('token')
       const res = await fetch('http://localhost:5000/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ courseId }),
+        body: JSON.stringify({ slotId }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Booking failed')
-      setBookedCourseIds((prev) => [...prev, courseId])
+      setBookedSlotIds((prev) => [...prev, slotId])
       loadMyBookings() // refresh so the review form appears for this newly booked course
+      loadSchool() // refresh so the booked slot disappears from available list
     } catch (err) {
       setBookingError(err.message)
     } finally {
-      setBookingCourseId(null)
+      setBookingSlotId(null)
     }
   }
 
@@ -115,52 +116,75 @@ export default function SchoolDetail() {
             {bookingError && <p className="text-brake text-sm mb-4">{bookingError}</p>}
 
             <div className="flex flex-col gap-4 mt-6">
-              {school.courses.map((c) => {
-                const alreadyBooked = myBookings.some((b) => b.courseId === c.id)
-                const isBooked = bookedCourseIds.includes(c.id) || alreadyBooked
-                const isBooking = bookingCourseId === c.id
-
-                return (
-                  <div
-                    key={c.id}
-                    className="border-2 border-asphalt rounded-lg p-6 flex items-center justify-between"
-                  >
+              {school.courses.map((c) => (
+                <div key={c.id} className="border-2 border-asphalt rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
                     <div>
                       <h3 className="font-display text-2xl mb-1">{c.name}</h3>
                       <p className="text-sm text-steel">{c.duration}</p>
                     </div>
-                    <div className="flex items-center gap-6">
-                      <span className="font-mono text-lg font-semibold">
-                        ₹{c.price.toLocaleString('en-IN')}
-                      </span>
+                    <span className="font-mono text-lg font-semibold">
+                      ₹{c.price.toLocaleString('en-IN')}
+                    </span>
+                  </div>
 
-                      {isBooked ? (
-                        <span className="flex items-center gap-2 text-route text-sm font-semibold">
-                          <Check size={16} />
-                          Booked
-                        </span>
-                      ) : user && user.role === 'LEARNER' ? (
-                        <button
-                          onClick={() => handleBook(c.id)}
-                          disabled={isBooking}
-                          className="bg-signal text-asphalt text-sm font-semibold px-5 py-2.5 rounded-md hover:bg-asphalt hover:text-signal transition-colors disabled:opacity-60"
-                        >
-                          {isBooking ? 'Booking…' : 'Book this course'}
-                        </button>
-                      ) : user && user.role === 'OWNER' ? (
-                        <span className="text-xs text-steel font-mono">OWNER VIEW</span>
+                  {!user && (
+                    <Link
+                      to="/login"
+                      className="inline-block bg-signal text-asphalt text-sm font-semibold px-5 py-2.5 rounded-md hover:bg-asphalt hover:text-signal transition-colors"
+                    >
+                      Log in to view available slots
+                    </Link>
+                  )}
+
+                  {user?.role === 'OWNER' && (
+                    <span className="text-xs text-steel font-mono">OWNER VIEW</span>
+                  )}
+
+                  {user?.role === 'LEARNER' && (
+                    <div>
+                      <p className="text-xs font-mono text-steel tracking-wide mb-2">
+                        AVAILABLE SLOTS
+                      </p>
+                      {c.slots.length === 0 ? (
+                        <p className="text-sm text-steel">No upcoming slots available.</p>
                       ) : (
-                        <Link
-                          to="/login"
-                          className="bg-signal text-asphalt text-sm font-semibold px-5 py-2.5 rounded-md hover:bg-asphalt hover:text-signal transition-colors"
-                        >
-                          Log in to book
-                        </Link>
+                        <div className="flex flex-wrap gap-2">
+                          {c.slots.map((slot) => {
+                            const isBooked = bookedSlotIds.includes(slot.id)
+                            const isBooking = bookingSlotId === slot.id
+                            return (
+                              <button
+                                key={slot.id}
+                                onClick={() => handleBook(slot.id)}
+                                disabled={isBooking || isBooked}
+                                className={`text-sm font-medium px-3 py-2 rounded-md border-2 transition-colors ${
+                                  isBooked
+                                    ? 'border-route bg-route/10 text-route'
+                                    : 'border-asphalt hover:bg-signal hover:border-signal'
+                                } disabled:cursor-default`}
+                              >
+                                {isBooked ? (
+                                  <span className="flex items-center gap-1">
+                                    <Check size={14} /> Booked
+                                  </span>
+                                ) : isBooking ? (
+                                  'Booking…'
+                                ) : (
+                                  new Date(slot.dateTime).toLocaleString('en-IN', {
+                                    dateStyle: 'medium',
+                                    timeStyle: 'short',
+                                  })
+                                )}
+                              </button>
+                            )
+                          })}
+                        </div>
                       )}
                     </div>
-                  </div>
-                )
-              })}
+                  )}
+                </div>
+              ))}
             </div>
           </div>
 
