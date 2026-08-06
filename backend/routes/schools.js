@@ -8,6 +8,7 @@ const router = express.Router()
 router.get('/', async (req, res) => {
   try {
     const schools = await prisma.school.findMany({
+      where: { status: 'APPROVED' },
       include: { courses: true },
     })
 

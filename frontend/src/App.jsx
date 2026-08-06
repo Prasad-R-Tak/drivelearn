@@ -6,6 +6,8 @@ import SchoolSearch from './pages/SchoolSearch'
 import SchoolDetail from './pages/SchoolDetail'
 import OwnerDashboard from './pages/OwnerDashboard'
 import Settings from './pages/Settings'
+import InstructorDashboard from './pages/InstructorDashboard'
+import AdminDashboard from './pages/AdminDashboard'
 
 function ProtectedRoute({ children, role }) {
   const { user, loading } = useAuth()
@@ -20,6 +22,22 @@ function ProtectedRoute({ children, role }) {
 function AppRoutes() {
   return (
     <Routes>
+      <Route
+        path="/instructor"
+        element={
+          <ProtectedRoute role="INSTRUCTOR">
+            <InstructorDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/admin"
+        element={
+          <ProtectedRoute role="ADMIN">
+            <AdminDashboard />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/settings"
         element={

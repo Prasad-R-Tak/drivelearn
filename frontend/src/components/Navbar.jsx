@@ -40,6 +40,16 @@ export default function Navbar() {
                   Dashboard
                 </Link>
               )}
+              {user.role === 'INSTRUCTOR' && (
+                <Link to="/instructor" className="text-sm font-medium hover:text-signal transition-colors">
+                  Dashboard
+                </Link>
+              )}
+              {user.role === 'ADMIN' && (
+                <Link to="/admin" className="text-sm font-medium hover:text-signal transition-colors">
+                  Admin
+                </Link>
+              )}
               <Link to="/settings" className="text-sm font-medium hover:text-signal transition-colors">
                 Settings
               </Link>

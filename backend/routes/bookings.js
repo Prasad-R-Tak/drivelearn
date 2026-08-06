@@ -4,14 +4,10 @@ const { requireAuth, requireRole } = require('../middleware/auth')
 
 const router = express.Router()
 
-// POST /api/bookings — a logged-in learner books a specific lesson slot
 router.post('/', requireAuth, requireRole('LEARNER'), async (req, res) => {
   try {
     const { slotId } = req.body
-
-    if (!slotId) {
-      return res.status(400).json({ error: 'slotId is required' })
-    }
+    if (!slotId) return res.status(400).json({ error: 'slotId is required' })
 
     const slot = await prisma.lessonSlot.findUnique({
       where: { id: Number(slotId) },
@@ -33,12 +29,10 @@ router.post('/', requireAuth, requireRole('LEARNER'), async (req, res) => {
           courseId: slot.course.id,
           userId: user.id,
           slotId: slot.id,
+          instructorId: slot.instructorId,
         },
       })
-      await tx.lessonSlot.update({
-        where: { id: slot.id },
-        data: { isBooked: true },
-      })
+      await tx.lessonSlot.update({ where: { id: slot.id }, data: { isBooked: true } })
       return created
     })
 

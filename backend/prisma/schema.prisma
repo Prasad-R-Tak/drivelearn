@@ -4,17 +4,24 @@ generator client {
 
 datasource db {
   provider = "sqlite"
-  
 }
 
 enum Role {
   LEARNER
   OWNER
+  INSTRUCTOR
+  ADMIN
 }
 
 enum EnrollmentStatus {
   ACTIVE
   COMPLETED
+}
+
+enum SchoolStatus {
+  PENDING
+  APPROVED
+  REJECTED
 }
 
 model User {
@@ -24,59 +31,78 @@ model User {
   password  String
   role      Role
   createdAt DateTime @default(now())
-  enrollments Enrollment[]
-  reviewsWritten Review[]
 
-  school    School?  // present only if role is OWNER
+  school            School?
+  enrollments       Enrollment[]
+  reviewsWritten    Review[]
+  instructorProfile Instructor?
 }
 
 model School {
-  id        Int      @id @default(autoincrement())
+  id        Int          @id @default(autoincrement())
   name      String
   city      String
   locality  String
-  rating    Float    @default(0)
-  reviews   Int      @default(0)
+  rating    Float        @default(0)
+  reviews   Int          @default(0)
+  status    SchoolStatus @default(PENDING)
 
   owner     User     @relation(fields: [ownerId], references: [id])
   ownerId   Int      @unique
 
-  courses      Course[]
-  enrollments  Enrollment[]
+  courses     Course[]
+  enrollments Enrollment[]
   reviewsList Review[]
+  instructors Instructor[]
+}
+
+model Instructor {
+  id Int @id @default(autoincrement())
+
+  user   User @relation(fields: [userId], references: [id])
+  userId Int  @unique
+
+  school   School @relation(fields: [schoolId], references: [id])
+  schoolId Int
+
+  slots       LessonSlot[]
+  enrollments Enrollment[]
 }
 
 model Course {
-  id        Int      @id @default(autoincrement())
-  name      String
-  duration  String
-  price     Int
+  id       Int    @id @default(autoincrement())
+  name     String
+  duration String
+  price    Int
 
-  school    School   @relation(fields: [schoolId], references: [id])
-  schoolId  Int
+  school   School @relation(fields: [schoolId], references: [id])
+  schoolId Int
 
   enrollments Enrollment[]
-  reviews   Review[]
-  slots     LessonSlot[]
+  reviews     Review[]
+  slots       LessonSlot[]
 }
 
 model Enrollment {
-  id        Int               @id @default(autoincrement())
+  id          Int              @id @default(autoincrement())
   studentName String
-  progress  Int               @default(0)
-  status    EnrollmentStatus  @default(ACTIVE)
+  progress    Int              @default(0)
+  status      EnrollmentStatus @default(ACTIVE)
 
-  school    School   @relation(fields: [schoolId], references: [id])
-  schoolId  Int
+  school   School @relation(fields: [schoolId], references: [id])
+  schoolId Int
 
-  course    Course   @relation(fields: [courseId], references: [id])
-  courseId  Int
+  course   Course @relation(fields: [courseId], references: [id])
+  courseId Int
 
-  user      User?    @relation(fields: [userId], references: [id])
-  userId    Int?
+  user   User? @relation(fields: [userId], references: [id])
+  userId Int?
 
-  slot      LessonSlot? @relation(fields: [slotId], references: [id])
-  slotId    Int?        @unique
+  slot   LessonSlot? @relation(fields: [slotId], references: [id])
+  slotId Int?        @unique
+
+  instructor   Instructor? @relation(fields: [instructorId], references: [id])
+  instructorId Int?
 }
 
 model Review {
@@ -85,25 +111,28 @@ model Review {
   comment   String?
   createdAt DateTime @default(now())
 
-  school    School   @relation(fields: [schoolId], references: [id])
-  schoolId  Int
+  school   School @relation(fields: [schoolId], references: [id])
+  schoolId Int
 
-  course    Course   @relation(fields: [courseId], references: [id])
-  courseId  Int
+  course   Course @relation(fields: [courseId], references: [id])
+  courseId Int
 
-  user      User     @relation(fields: [userId], references: [id])
-  userId    Int
+  user   User @relation(fields: [userId], references: [id])
+  userId Int
 
-  @@unique([courseId, userId]) // one review per learner per course
+  @@unique([courseId, userId])
 }
 
 model LessonSlot {
-  id        Int      @id @default(autoincrement())
-  dateTime  DateTime
-  isBooked  Boolean  @default(false)
+  id       Int      @id @default(autoincrement())
+  dateTime DateTime
+  isBooked Boolean  @default(false)
 
-  course    Course   @relation(fields: [courseId], references: [id])
-  courseId  Int
+  course   Course @relation(fields: [courseId], references: [id])
+  courseId Int
+
+  instructor   Instructor? @relation(fields: [instructorId], references: [id])
+  instructorId Int?
 
   enrollment Enrollment?
 }

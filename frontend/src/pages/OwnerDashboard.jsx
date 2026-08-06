@@ -3,6 +3,7 @@ import DashboardSidebar from '../components/DashboardSidebar'
 import Overview from '../components/dashboard/Overview'
 import Students from '../components/dashboard/Students'
 import Courses from '../components/dashboard/Courses'
+import Instructors from '../components/dashboard/Instructors'
 import RegisterSchool from './RegisterSchool'
 
 export default function OwnerDashboard() {
@@ -50,14 +51,29 @@ export default function OwnerDashboard() {
     <div className="min-h-screen flex bg-canvas text-asphalt">
       <DashboardSidebar active={active} onChange={setActive} />
       <main className="flex-1 px-10 py-10">
+        {data && data.school.status !== 'APPROVED' && (
+          <div
+            className={`mb-8 border-2 rounded-lg px-5 py-4 text-sm ${
+              data.school.status === 'PENDING'
+                ? 'border-signal bg-signal/10 text-asphalt'
+                : 'border-brake text-brake'
+            }`}
+          >
+            {data.school.status === 'PENDING'
+              ? 'Your school is pending Admin approval and will not appear in learner search until verified.'
+              : 'Your school registration was rejected by an Admin. Contact support for details.'}
+          </div>
+        )}
+
         {data && (
           <>
             {active === 'overview' && <Overview stats={data.stats} students={data.students} />}
             {active === 'students' && (
               <Students students={data.students} courses={data.courses} onDataChanged={fetchDashboard} />
             )}
-            {active === 'courses' && (
-              <Courses courses={data.courses} onDataChanged={fetchDashboard} />
+            {active === 'courses' && <Courses courses={data.courses} onDataChanged={fetchDashboard} />}
+            {active === 'instructors' && (
+              <Instructors instructors={data.instructors} onDataChanged={fetchDashboard} />
             )}
           </>
         )}

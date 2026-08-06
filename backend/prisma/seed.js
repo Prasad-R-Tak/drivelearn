@@ -25,6 +25,7 @@ async function main() {
       locality: 'Kothrud',
       rating: 4.6,
       reviews: 128,
+      status: 'APPROVED',
       ownerId: owner1.id,
       courses: {
         create: [
@@ -60,6 +61,7 @@ async function main() {
       locality: 'Andheri',
       rating: 4.3,
       reviews: 210,
+      status: 'APPROVED',
       ownerId: owner2.id,
       courses: {
         create: [
@@ -67,6 +69,16 @@ async function main() {
           { name: 'Commercial License Prep', duration: '30 lessons', price: 8000 },
         ],
       },
+    },
+  })
+
+  
+  await prisma.user.create({
+    data: {
+      name: 'Platform Admin',
+      email: 'admin@drivelearn.com',
+      password: passwordHash,
+      role: 'ADMIN',
     },
   })
 

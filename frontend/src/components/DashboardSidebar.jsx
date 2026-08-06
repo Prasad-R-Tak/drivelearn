@@ -1,10 +1,11 @@
-import { LayoutDashboard, Users, BookOpen, LogOut } from 'lucide-react'
+import { LayoutDashboard, Users, BookOpen, LogOut, UserCog } from 'lucide-react'
 import { Link } from 'react-router-dom'
 
 const navItems = [
   { key: 'overview', label: 'Overview', icon: LayoutDashboard },
   { key: 'students', label: 'Students', icon: Users },
   { key: 'courses', label: 'Courses', icon: BookOpen },
+  { key: 'instructors', label: 'Instructors', icon: UserCog },
 ]
 
 export default function DashboardSidebar({ active, onChange }) {
