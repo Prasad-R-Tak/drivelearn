@@ -73,7 +73,7 @@ router.get('/:id/my-bookings', requireAuth, requireRole('LEARNER'), async (req, 
 
     const enrollments = await prisma.enrollment.findMany({
       where: { schoolId, userId: req.user.userId },
-      include: { course: true },
+      include: { course: true, slot: true },
     })
 
     // De-duplicate by course (in case someone booked the same course twice)
@@ -94,6 +94,7 @@ router.get('/:id/my-bookings', requireAuth, requireRole('LEARNER'), async (req, 
       return {
         courseId: e.courseId,
         courseName: e.course.name,
+        slotDateTime: e.slot ? e.slot.dateTime : null,
         review: review ? { rating: review.rating, comment: review.comment } : null,
       }
     })

@@ -143,6 +143,22 @@ export default function SchoolDetail() {
 
                   {user?.role === 'LEARNER' && (
                     <div>
+                      {myBookings
+                        .filter((b) => b.courseId === c.id && b.slotDateTime)
+                        .map((b) => (
+                          <p
+                            key={b.courseId}
+                            className="flex items-center gap-2 text-route text-sm font-semibold mb-4"
+                          >
+                            <Check size={16} />
+                            You're booked for{' '}
+                            {new Date(b.slotDateTime).toLocaleString('en-IN', {
+                              dateStyle: 'medium',
+                              timeStyle: 'short',
+                            })}
+                          </p>
+                        ))}
+
                       <p className="text-xs font-mono text-steel tracking-wide mb-2">
                         AVAILABLE SLOTS
                       </p>
