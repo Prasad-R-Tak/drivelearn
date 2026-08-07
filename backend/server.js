@@ -10,11 +10,12 @@ const reviewsRouter = require('./routes/reviews')
 const instructorRouter = require('./routes/instructor')
 const adminRouter = require('./routes/admin')
 const learnerRouter = require('./routes/learner')
+const path = require('path')
 
 const app = express()
 app.use(cors())
 app.use(express.json())
-
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')))
 app.get('/api/health', (req, res) => {
   res.json({ status: 'Backend is running' })
 })

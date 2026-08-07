@@ -32,6 +32,14 @@ model User {
   role      Role
   createdAt DateTime @default(now())
 
+  photoUrl  String?
+  phone     String?
+  address   String?
+  city      String?
+  state     String?
+  pincode   String?
+  bio       String?
+
   school            School?
   enrollments       Enrollment[]
   reviewsWritten    Review[]

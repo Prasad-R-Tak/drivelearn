@@ -7,9 +7,27 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    const token = localStorage.getItem('token')
     const stored = localStorage.getItem('user')
-    if (stored) setUser(JSON.parse(stored))
-    setLoading(false)
+
+    if (stored) setUser(JSON.parse(stored)) // show cached user instantly
+
+    if (token) {
+      fetch('http://localhost:5000/api/auth/me', {
+        headers: { Authorization: `Bearer ${token}` },
+      })
+        .then((res) => (res.ok ? res.json() : null))
+        .then((freshUser) => {
+          if (freshUser) {
+            setUser(freshUser)
+            localStorage.setItem('user', JSON.stringify(freshUser))
+          }
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false))
+    } else {
+      setLoading(false)
+    }
   }, [])
 
   const login = (userData, token) => {
@@ -24,8 +42,13 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  const refreshUser = (userData) => {
+    localStorage.setItem('user', JSON.stringify(userData))
+    setUser(userData)
+  }
+
   return (
-    <AuthContext.Provider value={{ user, login, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading, refreshUser }}>
       {children}
     </AuthContext.Provider>
   )

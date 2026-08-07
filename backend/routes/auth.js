@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken')
 const prisma = require('../prisma/client')
 const { requireAuth } = require('../middleware/auth')
 
+const upload = require('../middleware/upload')
 const router = express.Router()
 
 // POST /api/auth/signup
@@ -85,7 +86,10 @@ router.get('/me', requireAuth, async (req, res) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.userId },
-      select: { id: true, name: true, email: true, role: true, createdAt: true },
+      select: {
+        id: true, name: true, email: true, role: true, createdAt: true,
+        photoUrl: true, phone: true, address: true, city: true, state: true, pincode: true, bio: true,
+      },
     })
     if (!user) return res.status(404).json({ error: 'User not found' })
     res.json(user)
@@ -98,7 +102,7 @@ router.get('/me', requireAuth, async (req, res) => {
 // PATCH /api/auth/me — update name/email
 router.patch('/me', requireAuth, async (req, res) => {
   try {
-    const { name, email } = req.body
+    const { name, email, phone, address, city, state, pincode, bio } = req.body
 
     if (email) {
       const existing = await prisma.user.findUnique({ where: { email } })
@@ -112,14 +116,42 @@ router.patch('/me', requireAuth, async (req, res) => {
       data: {
         name: name ?? undefined,
         email: email ?? undefined,
+        phone: phone ?? undefined,
+        address: address ?? undefined,
+        city: city ?? undefined,
+        state: state ?? undefined,
+        pincode: pincode ?? undefined,
+        bio: bio ?? undefined,
       },
-      select: { id: true, name: true, email: true, role: true },
+      select: {
+        id: true, name: true, email: true, role: true,
+        photoUrl: true, phone: true, address: true, city: true, state: true, pincode: true, bio: true,
+      },
     })
 
     res.json(user)
   } catch (err) {
     console.error(err)
     res.status(500).json({ error: 'Failed to update profile' })
+  }
+})
+
+// POST /api/auth/me/photo — upload profile photo
+router.post('/me/photo', requireAuth, upload.single('photo'), async (req, res) => {
+  try {
+    if (!req.file) return res.status(400).json({ error: 'No file uploaded' })
+
+    const photoUrl = `/uploads/${req.file.filename}`
+    const user = await prisma.user.update({
+      where: { id: req.user.userId },
+      data: { photoUrl },
+      select: { id: true, name: true, email: true, role: true, photoUrl: true },
+    })
+
+    res.json(user)
+  } catch (err) {
+    console.error(err)
+    res.status(500).json({ error: 'Failed to upload photo' })
   }
 })
 

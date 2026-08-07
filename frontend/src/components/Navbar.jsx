@@ -58,7 +58,20 @@ export default function Navbar() {
               <Link to="/settings" className="text-sm font-medium hover:text-signal transition-colors">
                 Settings
               </Link>
-              <span className="text-sm text-steel hidden sm:inline">{user.name}</span>
+              <span className="flex items-center gap-2 text-sm text-steel">
+                {user.photoUrl ? (
+                  <img
+                    src={`http://localhost:5000${user.photoUrl}`}
+                    alt={user.name}
+                    className="w-7 h-7 rounded-full object-cover border border-steel/40"
+                  />
+                ) : (
+                  <span className="w-7 h-7 rounded-full bg-signal/20 text-asphalt text-xs font-semibold flex items-center justify-center">
+                    {user.name?.[0]}
+                  </span>
+                )}
+                <span className="hidden sm:inline">{user.name}</span>
+              </span>
               <button
                 onClick={handleLogout}
                 className="text-sm font-semibold border border-steel/40 px-3 py-1.5 rounded-md hover:border-signal hover:text-signal transition-colors"
