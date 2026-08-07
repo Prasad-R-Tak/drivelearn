@@ -12,11 +12,11 @@ export default function SchoolDetail() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const [bookingSlotId, setBookingSlotId] = useState(null)
-  const [bookedSlotIds, setBookedSlotIds] = useState([])
+  const [bookingBatchId, setBookingBatchId] = useState(null)
+  const [bookedBatchIds, setBookedBatchIds] = useState([])
   const [bookingError, setBookingError] = useState('')
 
-  const [myBookings, setMyBookings] = useState([]) // [{ courseId, courseName, review }]
+  const [myBookings, setMyBookings] = useState([])
 
   const loadSchool = () => {
     fetch(`http://localhost:5000/api/schools/${id}`)
@@ -45,25 +45,25 @@ export default function SchoolDetail() {
     loadMyBookings()
   }, [id, user])
 
-  const handleBook = async (slotId) => {
+  const handleBook = async (batchId) => {
     setBookingError('')
-    setBookingSlotId(slotId)
+    setBookingBatchId(batchId)
     try {
       const token = localStorage.getItem('token')
       const res = await fetch('http://localhost:5000/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ slotId }),
+        body: JSON.stringify({ batchId }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Booking failed')
-      setBookedSlotIds((prev) => [...prev, slotId])
-      loadMyBookings() // refresh so the review form appears for this newly booked course
-      loadSchool() // refresh so the booked slot disappears from available list
+      setBookedBatchIds((prev) => [...prev, batchId])
+      loadMyBookings()
+      loadSchool()
     } catch (err) {
       setBookingError(err.message)
     } finally {
-      setBookingSlotId(null)
+      setBookingBatchId(null)
     }
   }
 
@@ -71,9 +71,7 @@ export default function SchoolDetail() {
     <div className="min-h-screen bg-canvas text-asphalt">
       <Navbar />
 
-      {loading && (
-        <div className="max-w-4xl mx-auto px-6 py-12 text-steel text-sm">Loading school…</div>
-      )}
+      {loading && <div className="max-w-4xl mx-auto px-6 py-12 text-steel text-sm">Loading school…</div>}
 
       {error && (
         <div className="max-w-4xl mx-auto px-6 py-12">
@@ -83,7 +81,6 @@ export default function SchoolDetail() {
 
       {school && (
         <>
-          {/* Header */}
           <section className="bg-asphalt text-canvas">
             <div className="max-w-4xl mx-auto px-6 py-12">
               <Link
@@ -109,108 +106,104 @@ export default function SchoolDetail() {
             <LaneDivider />
           </section>
 
-          {/* Courses */}
           <div className="max-w-4xl mx-auto px-6 py-12">
             <h2 className="font-display text-3xl mb-2">Courses offered</h2>
 
             {bookingError && <p className="text-brake text-sm mb-4">{bookingError}</p>}
 
             <div className="flex flex-col gap-4 mt-6">
-              {school.courses.map((c) => (
-                <div key={c.id} className="border-2 border-asphalt rounded-lg p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="font-display text-2xl mb-1">{c.name}</h3>
-                      <p className="text-sm text-steel">{c.duration}</p>
+              {school.courses.map((c) => {
+                const myBookingForCourse = myBookings.find((b) => b.courseId === c.id && b.batchStartDate)
+
+                return (
+                  <div key={c.id} className="border-2 border-asphalt rounded-lg p-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <div>
+                        <h3 className="font-display text-2xl mb-1">{c.name}</h3>
+                        <p className="text-sm text-steel">{c.duration}</p>
+                      </div>
+                      <span className="font-mono text-lg font-semibold">₹{c.price.toLocaleString('en-IN')}</span>
                     </div>
-                    <span className="font-mono text-lg font-semibold">
-                      ₹{c.price.toLocaleString('en-IN')}
-                    </span>
-                  </div>
 
-                  {!user && (
-                    <Link
-                      to="/login"
-                      className="inline-block bg-signal text-asphalt text-sm font-semibold px-5 py-2.5 rounded-md hover:bg-asphalt hover:text-signal transition-colors"
-                    >
-                      Log in to view available slots
-                    </Link>
-                  )}
-
-                  {user?.role === 'OWNER' && (
-                    <span className="text-xs text-steel font-mono">OWNER VIEW</span>
-                  )}
-
-                  {user?.role === 'LEARNER' && (
-                    <div>
-                      {myBookings
-                        .filter((b) => b.courseId === c.id && b.slotDateTime)
-                        .map((b) => (
-                          <p
-                            key={b.courseId}
-                            className="flex items-center gap-2 text-route text-sm font-semibold mb-4"
-                          >
-                            <Check size={16} />
-                            You're booked for{' '}
-                            {new Date(b.slotDateTime).toLocaleString('en-IN', {
-                              dateStyle: 'medium',
-                              timeStyle: 'short',
-                            })}
-                          </p>
-                        ))}
-
-                      <p className="text-xs font-mono text-steel tracking-wide mb-2">
-                        AVAILABLE SLOTS
+                    {myBookingForCourse && (
+                      <p className="flex items-center gap-2 text-route text-sm font-semibold mb-4">
+                        <Check size={16} />
+                        You're booked — starts{' '}
+                        {new Date(myBookingForCourse.batchStartDate).toLocaleString('en-IN', {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        })}
                       </p>
-                      {c.slots.length === 0 ? (
-                        <p className="text-sm text-steel">No upcoming slots available.</p>
-                      ) : (
-                        <div className="flex flex-wrap gap-2">
-                          {c.slots.map((slot) => {
-                            const isBooked = bookedSlotIds.includes(slot.id)
-                            const isBooking = bookingSlotId === slot.id
-                            return (
-                              <button
-                                key={slot.id}
-                                onClick={() => handleBook(slot.id)}
-                                disabled={isBooking || isBooked}
-                                className={`text-sm font-medium px-3 py-2 rounded-md border-2 transition-colors ${
-                                  isBooked
-                                    ? 'border-route bg-route/10 text-route'
-                                    : 'border-asphalt hover:bg-signal hover:border-signal'
-                                } disabled:cursor-default`}
-                              >
-                                {isBooked ? (
-                                  <span className="flex items-center gap-1">
-                                    <Check size={14} /> Booked
-                                  </span>
-                                ) : isBooking ? (
-                                  'Booking…'
-                                ) : (
-                                  new Date(slot.dateTime).toLocaleString('en-IN', {
-                                    dateStyle: 'medium',
-                                    timeStyle: 'short',
-                                  })
-                                )}
-                              </button>
-                            )
-                          })}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))}
+                    )}
+
+                    {!user && (
+                      <Link
+                        to="/login"
+                        className="inline-block bg-signal text-asphalt text-sm font-semibold px-5 py-2.5 rounded-md hover:bg-asphalt hover:text-signal transition-colors"
+                      >
+                        Log in to view available batches
+                      </Link>
+                    )}
+
+                    {user?.role === 'OWNER' && <span className="text-xs text-steel font-mono">OWNER VIEW</span>}
+
+                    {user?.role === 'LEARNER' && !myBookingForCourse && (
+                      <div>
+                        <p className="text-xs font-mono text-steel tracking-wide mb-2">AVAILABLE BATCHES</p>
+                        {c.batches.length === 0 ? (
+                          <p className="text-sm text-steel">No upcoming batches available.</p>
+                        ) : (
+                          <div className="flex flex-col gap-2">
+                            {c.batches.map((batch) => {
+                              const isBooked = bookedBatchIds.includes(batch.id)
+                              const isBooking = bookingBatchId === batch.id
+                              return (
+                                <button
+                                  key={batch.id}
+                                  onClick={() => handleBook(batch.id)}
+                                  disabled={isBooking || isBooked}
+                                  className={`text-left text-sm font-medium px-4 py-3 rounded-md border-2 transition-colors ${
+                                    isBooked
+                                      ? 'border-route bg-route/10 text-route'
+                                      : 'border-asphalt hover:bg-signal hover:border-signal'
+                                  } disabled:cursor-default`}
+                                >
+                                  {isBooked ? (
+                                    <span className="flex items-center gap-1">
+                                      <Check size={14} /> Booked
+                                    </span>
+                                  ) : isBooking ? (
+                                    'Booking…'
+                                  ) : (
+                                    <>
+                                      Starts{' '}
+                                      {new Date(batch.startDate).toLocaleString('en-IN', {
+                                        dateStyle: 'medium',
+                                        timeStyle: 'short',
+                                      })}
+                                      <span className="block text-xs text-steel font-mono mt-0.5">
+                                        {batch.totalLessons} daily lessons · Instructor: {batch.instructor.user.name}
+                                      </span>
+                                    </>
+                                  )}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           </div>
 
           <LaneDivider className="opacity-20" />
 
-          {/* Reviews */}
           <div className="max-w-4xl mx-auto px-6 py-12">
             <h2 className="font-display text-3xl mb-6">Reviews</h2>
 
-            {/* One review form per course this learner has booked */}
             {myBookings.length > 0 && (
               <div className="flex flex-col gap-6 mb-10">
                 {myBookings.map((b) => (
@@ -228,7 +221,6 @@ export default function SchoolDetail() {
               </div>
             )}
 
-            {/* Public review list */}
             {school.reviewsList.length === 0 ? (
               <p className="text-steel text-sm">No reviews yet.</p>
             ) : (
@@ -239,11 +231,7 @@ export default function SchoolDetail() {
                       <span className="font-semibold text-sm">{r.user.name}</span>
                       <div className="flex gap-0.5">
                         {[1, 2, 3, 4, 5].map((n) => (
-                          <Star
-                            key={n}
-                            size={14}
-                            className={n <= r.rating ? 'fill-signal text-signal' : 'text-steel/30'}
-                          />
+                          <Star key={n} size={14} className={n <= r.rating ? 'fill-signal text-signal' : 'text-steel/30'} />
                         ))}
                       </div>
                     </div>
@@ -293,9 +281,7 @@ function ReviewForm({ courseId, courseName, existingReview, onSaved }) {
 
   return (
     <form onSubmit={handleSubmit} className="border-2 border-asphalt rounded-lg p-6">
-      <h3 className="font-display text-xl mb-1">
-        {existingReview ? 'Edit your review' : 'Leave a review'}
-      </h3>
+      <h3 className="font-display text-xl mb-1">{existingReview ? 'Edit your review' : 'Leave a review'}</h3>
       <p className="text-xs font-mono text-steel mb-4">{courseName}</p>
 
       {error && <p className="text-brake text-sm mb-3">{error}</p>}

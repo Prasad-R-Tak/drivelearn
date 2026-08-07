@@ -39,16 +39,16 @@ model User {
 }
 
 model School {
-  id        Int          @id @default(autoincrement())
-  name      String
-  city      String
-  locality  String
-  rating    Float        @default(0)
-  reviews   Int          @default(0)
-  status    SchoolStatus @default(PENDING)
+  id       Int          @id @default(autoincrement())
+  name     String
+  city     String
+  locality String
+  rating   Float        @default(0)
+  reviews  Int          @default(0)
+  status   SchoolStatus @default(PENDING)
 
-  owner     User     @relation(fields: [ownerId], references: [id])
-  ownerId   Int      @unique
+  owner   User @relation(fields: [ownerId], references: [id])
+  ownerId Int  @unique
 
   courses     Course[]
   enrollments Enrollment[]
@@ -65,7 +65,7 @@ model Instructor {
   school   School @relation(fields: [schoolId], references: [id])
   schoolId Int
 
-  slots       LessonSlot[]
+  batches     Batch[]
   enrollments Enrollment[]
 }
 
@@ -80,7 +80,32 @@ model Course {
 
   enrollments Enrollment[]
   reviews     Review[]
-  slots       LessonSlot[]
+  batches     Batch[]
+}
+
+model Batch {
+  id           Int      @id @default(autoincrement())
+  startDate    DateTime
+  totalLessons Int
+  isBooked     Boolean  @default(false)
+
+  course   Course @relation(fields: [courseId], references: [id])
+  courseId Int
+
+  instructor   Instructor @relation(fields: [instructorId], references: [id])
+  instructorId Int
+
+  lessonDays LessonDay[]
+  enrollment Enrollment?
+}
+
+model LessonDay {
+  id       Int      @id @default(autoincrement())
+  date     DateTime
+  attended Boolean  @default(false)
+
+  batch   Batch @relation(fields: [batchId], references: [id])
+  batchId Int
 }
 
 model Enrollment {
@@ -98,8 +123,8 @@ model Enrollment {
   user   User? @relation(fields: [userId], references: [id])
   userId Int?
 
-  slot   LessonSlot? @relation(fields: [slotId], references: [id])
-  slotId Int?        @unique
+  batch   Batch? @relation(fields: [batchId], references: [id])
+  batchId Int?   @unique
 
   instructor   Instructor? @relation(fields: [instructorId], references: [id])
   instructorId Int?
@@ -121,18 +146,4 @@ model Review {
   userId Int
 
   @@unique([courseId, userId])
-}
-
-model LessonSlot {
-  id       Int      @id @default(autoincrement())
-  dateTime DateTime
-  isBooked Boolean  @default(false)
-
-  course   Course @relation(fields: [courseId], references: [id])
-  courseId Int
-
-  instructor   Instructor? @relation(fields: [instructorId], references: [id])
-  instructorId Int?
-
-  enrollment Enrollment?
 }

@@ -50,6 +50,11 @@ export default function Navbar() {
                   Admin
                 </Link>
               )}
+              {user.role === 'LEARNER' && (
+                <Link to="/my-courses" className="text-sm font-medium hover:text-signal transition-colors">
+                  My Courses
+                </Link>
+              )}
               <Link to="/settings" className="text-sm font-medium hover:text-signal transition-colors">
                 Settings
               </Link>

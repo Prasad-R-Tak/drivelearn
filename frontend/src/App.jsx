@@ -8,6 +8,7 @@ import OwnerDashboard from './pages/OwnerDashboard'
 import Settings from './pages/Settings'
 import InstructorDashboard from './pages/InstructorDashboard'
 import AdminDashboard from './pages/AdminDashboard'
+import LearnerDashboard from './pages/LearnerDashboard'
 
 function ProtectedRoute({ children, role }) {
   const { user, loading } = useAuth()
@@ -22,6 +23,15 @@ function ProtectedRoute({ children, role }) {
 function AppRoutes() {
   return (
     <Routes>
+
+      <Route
+        path="/my-courses"
+        element={
+          <ProtectedRoute role="LEARNER">
+            <LearnerDashboard />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/instructor"
         element={

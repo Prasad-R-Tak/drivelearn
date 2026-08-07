@@ -6,16 +6,12 @@ const router = express.Router()
 
 router.post('/', requireAuth, requireRole('LEARNER'), async (req, res) => {
   try {
-    const { slotId } = req.body
-    if (!slotId) return res.status(400).json({ error: 'slotId is required' })
+    const { batchId } = req.body
+    if (!batchId) return res.status(400).json({ error: 'batchId is required' })
 
-    const slot = await prisma.lessonSlot.findUnique({
-      where: { id: Number(slotId) },
-      include: { course: true },
-    })
-
-    if (!slot) return res.status(404).json({ error: 'Slot not found' })
-    if (slot.isBooked) return res.status(409).json({ error: 'This slot is already booked' })
+    const batch = await prisma.batch.findUnique({ where: { id: Number(batchId) }, include: { course: true } })
+    if (!batch) return res.status(404).json({ error: 'Batch not found' })
+    if (batch.isBooked) return res.status(409).json({ error: 'This batch is already booked' })
 
     const user = await prisma.user.findUnique({ where: { id: req.user.userId } })
 
@@ -25,14 +21,14 @@ router.post('/', requireAuth, requireRole('LEARNER'), async (req, res) => {
           studentName: user.name,
           progress: 0,
           status: 'ACTIVE',
-          schoolId: slot.course.schoolId,
-          courseId: slot.course.id,
+          schoolId: batch.course.schoolId,
+          courseId: batch.course.id,
           userId: user.id,
-          slotId: slot.id,
-          instructorId: slot.instructorId,
+          batchId: batch.id,
+          instructorId: batch.instructorId,
         },
       })
-      await tx.lessonSlot.update({ where: { id: slot.id }, data: { isBooked: true } })
+      await tx.batch.update({ where: { id: batch.id }, data: { isBooked: true } })
       return created
     })
 

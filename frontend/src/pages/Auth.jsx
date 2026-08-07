@@ -54,8 +54,12 @@ export default function Auth() {
       // Redirect based on role
       if (data.user.role === 'OWNER') {
         navigate('/dashboard')
+      } else if (data.user.role === 'INSTRUCTOR') {
+        navigate('/instructor')
+      } else if (data.user.role === 'ADMIN') {
+        navigate('/admin')
       } else {
-        navigate('/schools')
+        navigate('/my-courses')
       }
     } catch (err) {
       setError(err.message)

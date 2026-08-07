@@ -4,16 +4,12 @@ const { requireAuth, requireRole } = require('../middleware/auth')
 
 const router = express.Router()
 
-// GET /api/schools — list all schools, with computed starting price
 router.get('/', async (req, res) => {
   try {
-    const schools = await prisma.school.findMany({
-      where: { status: 'APPROVED' },
-      include: { courses: true },
-    })
+    const schools = await prisma.school.findMany({ where: { status: 'APPROVED' }, include: { courses: true } })
 
     const formatted = schools
-      .filter((s) => s.courses.length > 0) // hide schools that haven't added courses yet
+      .filter((s) => s.courses.length > 0)
       .map((s) => ({
         id: s.id,
         name: s.name,
@@ -32,7 +28,6 @@ router.get('/', async (req, res) => {
   }
 })
 
-// GET /api/schools/:id — single school detail, with full course + review info
 router.get('/:id', async (req, res) => {
   try {
     const school = await prisma.school.findUnique({
@@ -40,26 +35,21 @@ router.get('/:id', async (req, res) => {
       include: {
         courses: {
           include: {
-            slots: {
-              where: { isBooked: false, dateTime: { gte: new Date() } },
-              orderBy: { dateTime: 'asc' },
+            batches: {
+              where: { isBooked: false, startDate: { gte: new Date() } },
+              orderBy: { startDate: 'asc' },
+              include: { instructor: { include: { user: { select: { name: true } } } } },
             },
           },
         },
         reviewsList: {
-          include: {
-            user: { select: { name: true } },
-            course: { select: { name: true } },
-          },
+          include: { user: { select: { name: true } }, course: { select: { name: true } } },
           orderBy: { createdAt: 'desc' },
         },
       },
     })
 
-    if (!school) {
-      return res.status(404).json({ error: 'School not found' })
-    }
-
+    if (!school) return res.status(404).json({ error: 'School not found' })
     res.json(school)
   } catch (err) {
     console.error(err)
@@ -67,17 +57,15 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-// GET /api/schools/:id/my-bookings — logged-in learner's bookings + existing reviews at this school
 router.get('/:id/my-bookings', requireAuth, requireRole('LEARNER'), async (req, res) => {
   try {
     const schoolId = Number(req.params.id)
 
     const enrollments = await prisma.enrollment.findMany({
       where: { schoolId, userId: req.user.userId },
-      include: { course: true, slot: true },
+      include: { course: true, batch: true },
     })
 
-    // De-duplicate by course (in case someone booked the same course twice)
     const seen = new Set()
     const uniqueCourses = enrollments.filter((e) => {
       if (seen.has(e.courseId)) return false
@@ -95,7 +83,7 @@ router.get('/:id/my-bookings', requireAuth, requireRole('LEARNER'), async (req, 
       return {
         courseId: e.courseId,
         courseName: e.course.name,
-        slotDateTime: e.slot ? e.slot.dateTime : null,
+        batchStartDate: e.batch ? e.batch.startDate : null,
         review: review ? { rating: review.rating, comment: review.comment } : null,
       }
     })

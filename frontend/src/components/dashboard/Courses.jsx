@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import Modal from '../Modal'
-import SlotsManager from '../SlotsManager'
+import BatchesManager from '../BatchesManager'
 
 export default function Courses({ courses, onDataChanged }) {
   const [showAddModal, setShowAddModal] = useState(false)
   const [editingCourse, setEditingCourse] = useState(null)
-  const [managingSlotsFor, setManagingSlotsFor] = useState(null)
+  const [managingBatchesFor, setManagingBatchesFor] = useState(null)
+  
 
   return (
     <div>
@@ -46,10 +47,10 @@ export default function Courses({ courses, onDataChanged }) {
                 </button>
               </div>
               <button
-                onClick={() => setManagingSlotsFor(c)}
+                onClick={() => setManagingBatchesFor(c)}
                 className="w-full border-2 border-route text-route text-sm font-semibold py-2 rounded-md hover:bg-route hover:text-canvas transition-colors"
               >
-                Manage slots
+                Manage batches
               </button>
             </div>
           ))}
@@ -69,8 +70,8 @@ export default function Courses({ courses, onDataChanged }) {
         />
       )}
 
-      {managingSlotsFor && (
-        <SlotsManager course={managingSlotsFor} onClose={() => setManagingSlotsFor(null)} />
+      {managingBatchesFor && (
+        <BatchesManager course={managingBatchesFor} onClose={() => setManagingBatchesFor(null)} />
       )}
     </div>
   )
